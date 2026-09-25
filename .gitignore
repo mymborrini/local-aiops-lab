@@ -2,3 +2,4 @@ myvenv/
 .code/
 
 *.egg-info
+**/__pycache__/**

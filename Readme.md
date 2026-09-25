@@ -23,3 +23,7 @@ After you set up the python virtual environment, install dependencies
 ### Build the project
 
     pip install -e .
+
+### Swagger
+
+    http://localhost:8000/docs

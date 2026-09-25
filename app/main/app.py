@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from shared.models import JobStatus, JobResponse, JobRequest
 from uuid import uuid4
-from app.main.redis_client import redis_client
+from shared.redis import RedisCLient
 
 app = FastAPI(title="AIOps Lab")
 
@@ -23,9 +23,20 @@ def create_job(request: JobRequest):
     )
 
     jobs[job_id] = job
+    print(f"Process JOB ID: {job_id}")
+    print("Creating Redis Client")
+    redis_client = RedisCLient()
 
-    redis_client.rpush(
-        "jobs",
+
+    print("Save value in Redis DB")
+    redis_client.instance.set(
+        redis_client.redis_id(job_id=job_id),
+        job.model_dump_json()
+    )
+
+    print("Save value in Redis Queue")
+    redis_client.instance.rpush(
+        redis_client.JOBS_QUEUE_NAME,
         job_id
     )
 

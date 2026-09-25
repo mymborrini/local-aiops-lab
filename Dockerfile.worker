@@ -1,0 +1,12 @@
+FROM python:3.12-slim
+
+WORKDIR /worker
+WORKDIR /shared
+
+COPY worker ./worker
+COPY shared ./shared
+COPY pyproject.toml .
+
+RUN pip install -e .
+
+CMD ["python", "-m", "worker.main.process_job"]

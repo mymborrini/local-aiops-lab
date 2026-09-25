@@ -21,3 +21,12 @@ You need python version 3.12
 ### Swagger
 
     http://localhost:8000/docs
+
+### Commands
+
+#### Redis
+
+Check the keys in the queue:
+
+    docker compose exec redis redis-cli
+    LRANGE jobs 0 -1

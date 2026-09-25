@@ -8,9 +8,20 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+    container_name: app
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    depends_on:
+      - redis
+    container_name: worker
 
   redis:
     image: redis:8-alpine
+    container_name: redis
     ports:
       - "6379:6379"
+
         

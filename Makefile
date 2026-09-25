@@ -1,13 +1,10 @@
-.PHONY: install freeze dev run-app
+.PHONY: install run-app docker-up
 
 install:
-	pip install -r requirements.txt
-
-freeze:
-	pip freeze > requirements.txt
-
-dev:
 	pip install -e .
 
 run-app:
 	uvicorn app.main.app:app --reload
+
+docker-up:
+	docker compose up --build app -d

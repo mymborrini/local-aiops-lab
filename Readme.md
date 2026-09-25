@@ -14,15 +14,9 @@ You need python version 3.12
 
     .\myvenv\Scripts\Activate.ps1
 
-### Install dependecies
-
-After you set up the python virtual environment, install dependencies
-
-    pip install -r requirements.txt
-
 ### Build the project
 
-    pip install -e .
+    make install
 
 ### Swagger
 

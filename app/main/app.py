@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from shared.models import JobStatus, JobResponse, JobRequest
 from uuid import uuid4
+from app.main.redis_client import redis_client
 
 app = FastAPI(title="AIOps Lab")
 
@@ -22,6 +23,11 @@ def create_job(request: JobRequest):
     )
 
     jobs[job_id] = job
+
+    redis_client.rpush(
+        "jobs",
+        job_id
+    )
 
     return job
 

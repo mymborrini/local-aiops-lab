@@ -5,6 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "local-aiops-lab-app"
 version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.141.1",
+    "redis==8.1.0",
+    "uvicorn==0.54.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff==0.16.6",
+]
 
 [tool.setuptools.packages.find]
 where = ["app","worker","shared"]

@@ -1,21 +1,23 @@
 from shared.redis import RedisCLient
-import json
 from shared.models import JobStatus
 import time
-from redis import RedisError
+from shared.repository import JobRepository
 
-class ProcessJob(RedisCLient):
+
+class ProcessJob():
 
     def __init__(self):
         print("Process Job Initializing...", flush=True)
+        self.update_job = JobRepository()
+        self.redis_client = RedisCLient().instance
         super().__init__()
         print("Process Job Initialization Complete", flush=True)
 
     def main(self):
-        print(f"Start retrieving jobs from queue {self.JOBS_QUEUE_NAME}", flush=True)
+        print(f"Start retrieving jobs from queue {RedisCLient.JOBS_QUEUE_NAME}", flush=True)
         while True:
-            result = self.instance.blpop(
-                self.JOBS_QUEUE_NAME,
+            result = self.redis_client.blpop(
+                RedisCLient.JOBS_QUEUE_NAME,
                 timeout=25
             )
 
@@ -31,32 +33,19 @@ class ProcessJob(RedisCLient):
 
 
     def _process(self, job_id):
-        print(f"Processing job {job_id} from {self.JOBS_QUEUE_NAME}", flush=True)
-        redis_id =  self.redis_id(job_id=job_id)
+        print(f"Processing job {job_id} from {RedisCLient.JOBS_QUEUE_NAME}", flush=True)
 
-        job_data = self.instance.get(redis_id)
-
-        if job_data is None:
-            print(f"Job {job_id} not found", flush=True)
-            return
-
-        job = json.loads(job_data)
-        job["status"] = JobStatus.RUNNING
+        self.update_job.update_status(job_id=job_id, status=JobStatus.RUNNING.value)
 
         print(f"Job {job_id} is RUNNING", flush=True)
 
         # Simulate some operations
         time.sleep(5)
 
-        job["status"] = JobStatus.COMPLETED
+        self.update_job.update_status(job_id=job_id, status=JobStatus.COMPLETED.value)
         print(f"Job {job_id} is COMPLETED", flush=True)
 
-        self.instance.set(
-            redis_id,
-            json.dumps(job)
-        )
-
-        print(f"Job {job_id} is saved in Redis DB", flush=True)
+        print(f"Job {job_id} is saved in Psql DB", flush=True)
 
    
 

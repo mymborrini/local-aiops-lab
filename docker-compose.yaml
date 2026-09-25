@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+      - postgres
     container_name: app
 
   worker:
@@ -16,12 +17,19 @@ services:
       dockerfile: Dockerfile.worker
     depends_on:
       - redis
+      - postgres
     container_name: worker
 
   redis:
     image: redis:8-alpine
     container_name: redis
-    ports:
-      - "6379:6379"
+  
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: jobs
+      POSTGRES_USER: jobs
+      POSTGRES_PASSWORD: jobs
 
         

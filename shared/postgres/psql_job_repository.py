@@ -1,9 +1,9 @@
 from shared.postgres import PsqlClient
 from shared.postgres import PsqlClient
-from shared.models import JobResponse, JobStatus, Job
+from shared.models import JobStatus, Job, JobResponse
 import json
 import time
-
+from uuid import UUID
 
 class PsqlJobRepository(PsqlClient):
     def __init__(self):
@@ -44,9 +44,47 @@ class PsqlJobRepository(PsqlClient):
                 (job_id,),
             ).fetchone()
 
+        if row is None:
+            return None
+        
+
         return Job(
             job_id=str(row[0]),
             status=JobStatus(row[3]),
             total=row[2],
             numbers=row[1],
         )
+
+    def get_all_jobs(self) -> list[JobResponse]:
+        with self.get_connection() as conn:
+                rows = conn.execute(
+                    """
+                    SELECT job_id, status, total
+                    FROM jobs
+                    """
+                ).fetchall()
+
+        return [
+                JobResponse(job_id=str(row[0]), status=JobStatus(row[1]), total=row[2])
+                for row in rows
+            ]
+
+
+    def create_job(
+        self,
+        job_id: UUID,
+        numbers: list[float],
+        status: str,
+    ):
+        with self.get_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO jobs (job_id, numbers, status)
+                VALUES (%s, %s, %s)
+                """,
+                (
+                    job_id,
+                    json.dumps(numbers),
+                    status,
+                ),
+            )

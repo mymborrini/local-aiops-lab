@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from shared.models import JobStatus, JobResponse, JobRequest
 from uuid import uuid4
-from shared.redis import RedisCLient
-from shared.postgres import PsqlClient
+from shared.redis import RedisJobRepository
+from shared.postgres import PsqlJobRepository
 from contextlib import asynccontextmanager
 from app.main.db_initializer import DBInitializer
 import json
@@ -20,65 +20,44 @@ app = FastAPI(title="AIOps Lab", lifespan=lifespan)
 
 
 @app.get("/health")
-def health():
+def health_endpoint():
     return {"status": "UP"}
 
 
 @app.post("/jobs", response_model=str)
-def create_job(request: JobRequest):
+def create_job_endpoint(request: JobRequest):
     job_id = str(uuid4())
+    psql_job_repo = PsqlJobRepository()
+    redis_job_repo = RedisJobRepository()
 
     print(f"Process JOB ID: {job_id}")
 
     print("Save in PSQL DB")
-    with PsqlClient().get_connection() as conn:
-        conn.execute(
-            """
-            INSERT INTO jobs (job_id, numbers, total, status)
-            VALUES (%s, %s, %s, %s)
-            """,
-            (job_id, json.dumps(request.numbers), None, JobStatus.PENDING.value),
-        )
+    psql_job_repo.create_job(job_id, json.dumps(request.numbers), None, JobStatus.PENDING.value)
 
     print("Save value in Redis Queue")
-    redis_client = RedisCLient()
-    redis_client.instance.rpush(RedisCLient.JOBS_QUEUE_NAME, job_id)
+    redis_job_repo.push_job(job_id=job_id)
 
     return job_id
 
 
 @app.get("/jobs", response_model=list[JobResponse])
-def get_jobs():
-    with PsqlClient().get_connection() as conn:
-        rows = conn.execute(
-            """
-            SELECT job_id, status, total
-            FROM jobs
-            """
-        ).fetchall()
+def get_jobs_endpoint():
 
-    return [
-        JobResponse(job_id=str(row[0]), status=JobStatus(row[1]), total=row[2])
-        for row in rows
-    ]
+    psql_job_repo = PsqlJobRepository()
+    return psql_job_repo.get_all_jobs()
+
+    
 
 
 @app.get("/jobs/{job_id}", response_model=JobResponse)
-def get_job(job_id: str):
-    with PsqlClient().get_connection() as conn:
-        row = conn.execute(
-            """
-            SELECT job_id, status, total
-            FROM jobs
-            WHERE job_id = %s
-            """,
-            (job_id,),
-        ).fetchone()
+def get_job_endpoint(job_id: str):
 
-    if row is None:
+    psql_job_repo = PsqlJobRepository()
+    job_response = psql_job_repo.get_job(job_id=job_id)
+    if job_response is None:
         raise HTTPException(
-            status_code=404,
-            detail=f"Job {job_id} not found",
-        )
-
-    return JobResponse(job_id=str(row[0]), status=JobStatus(row[1]), total=row[2])
+                status_code=404,
+                detail=f"Job {job_id} not found",
+            )
+    return job_response

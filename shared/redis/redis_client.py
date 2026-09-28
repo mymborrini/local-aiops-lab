@@ -7,7 +7,7 @@ class RedisCLient:
 
     def __init__(self):
         self.instance = redis.Redis(
-            host=REDIS_HOST, port=REDIS_PORT, decode_responses=True
+            host=REDIS_HOST, port=REDIS_PORT, decode_responses=True, socket_timeout=None
         )
 
     def redis_id(seld, job_id):

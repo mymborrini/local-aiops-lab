@@ -1,12 +1,11 @@
 from shared.redis import RedisCLient
-from shared.models import JobStatus
+from shared.models import JobStatus, RedisMessage
 import time
 from shared.redis import RedisJobRepository
 from shared.postgres import PsqlJobRepository
 from shared.models import Job
-import json
 
-class ProcessJob:
+class JobProcessor:
     def __init__(self):
         super().__init__()
         print("Process Job Initializing...", flush=True)
@@ -20,17 +19,17 @@ class ProcessJob:
             flush=True,
         )
         while True:
-            result = self.redis_job_repo.get_last_job()
+            redisMessage: RedisMessage = self.redis_job_repo.get_last_job()
 
-            if result is None:
+            if redisMessage is None:
                 print("No jobs available, still listening...", flush=True)
                 continue
 
-            _, job_id = result
+            print(f"Received message from reds: {redisMessage}")
 
-            print(f"Received job {job_id}", flush=True)
+            print(f"Received job {redisMessage.job_id} event {redisMessage.event_id}", flush=True)
 
-            self._process(job_id)
+            self._process(redisMessage.job_id)
 
     def _process(self, job_id):
         print(f"Processing job {job_id} from {RedisCLient.JOBS_QUEUE_NAME}", flush=True)
@@ -53,5 +52,5 @@ class ProcessJob:
 
 
 if __name__ == "__main__":
-    print("Worker Start", flush=True)
-    ProcessJob().main()
+    print("Job Processor Start", flush=True)
+    JobProcessor().main()

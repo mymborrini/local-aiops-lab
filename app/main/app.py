@@ -11,7 +11,11 @@ import json
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("DB Initializing...", flush=True)
-    DBInitializer().init_job()
+    db_initializer = DBInitializer()
+    db_initializer.init_job()
+    print("Job table initialized")
+    db_initializer.init_outbox()
+    print("Outbox table initialized")
     print("DB Initialized", flush=True)
     yield
 
@@ -33,10 +37,10 @@ def create_job_endpoint(request: JobRequest):
     print(f"Process JOB ID: {job_id}")
 
     print("Save in PSQL DB")
-    psql_job_repo.create_job(job_id, json.dumps(request.numbers), None, JobStatus.PENDING.value)
+    psql_job_repo.create_job(job_id, json.dumps(request.numbers), JobStatus.PENDING.value)
 
     print("Save value in Redis Queue")
-    redis_job_repo.push_job(job_id=job_id)
+    # redis_job_repo.push_job(job_id=job_id)
 
     return job_id
 

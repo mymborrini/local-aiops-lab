@@ -52,7 +52,7 @@ class PsqlJobRepository(PsqlClient):
             job_id=str(row[0]),
             status=JobStatus(row[3]),
             total=row[2],
-            numbers=row[1],
+            numbers=json.loads(row[1]),
         )
 
     def get_all_jobs(self) -> list[JobResponse]:
@@ -76,6 +76,8 @@ class PsqlJobRepository(PsqlClient):
         numbers: list[float],
         status: str,
     ):
+
+        # With get_connection + Exception -> Everything is rolled back
         with self.get_connection() as conn:
             conn.execute(
                 """
@@ -88,3 +90,21 @@ class PsqlJobRepository(PsqlClient):
                     status,
                 ),
             )
+
+
+            conn.execute(
+                """
+                INSERT INTO outbox (job_id, event_type, payload)
+                VALUES (%s, %s, %s)
+                """,
+                (
+                    job_id,
+                    "JOB_CREATED",
+                    json.dumps(
+                        {
+                            "job_id": str(job_id),
+                        }
+                    ),
+                ),
+            )
+            

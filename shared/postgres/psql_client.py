@@ -1,12 +1,11 @@
 import psycopg
 
-class PsqlClient():
 
+class PsqlClient:
     def __init__(self):
         self._db_name = "jobs"
         self._db_user = "jobs"
         self.__db_psw = "jobs"
-        
 
     def get_connection(self):
         return psycopg.connect(

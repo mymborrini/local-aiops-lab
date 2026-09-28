@@ -7,12 +7,14 @@ from contextlib import asynccontextmanager
 from app.main.db_initializer import DBInitializer
 import json
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("DB Initializing...", flush=True)
     DBInitializer().init_job()
     print("DB Initialized", flush=True)
     yield
+
 
 app = FastAPI(title="AIOps Lab", lifespan=lifespan)
 
@@ -28,7 +30,6 @@ def create_job(request: JobRequest):
 
     print(f"Process JOB ID: {job_id}")
 
-
     print("Save in PSQL DB")
     with PsqlClient().get_connection() as conn:
         conn.execute(
@@ -36,22 +37,15 @@ def create_job(request: JobRequest):
             INSERT INTO jobs (job_id, numbers, total, status)
             VALUES (%s, %s, %s, %s)
             """,
-            (
-                job_id,
-                json.dumps(request.numbers),
-                None,
-                JobStatus.PENDING.value
-            ),
+            (job_id, json.dumps(request.numbers), None, JobStatus.PENDING.value),
         )
 
     print("Save value in Redis Queue")
     redis_client = RedisCLient()
-    redis_client.instance.rpush(
-        RedisCLient.JOBS_QUEUE_NAME,
-        job_id
-    )
+    redis_client.instance.rpush(RedisCLient.JOBS_QUEUE_NAME, job_id)
 
     return job_id
+
 
 @app.get("/jobs", response_model=list[JobResponse])
 def get_jobs():
@@ -63,11 +57,11 @@ def get_jobs():
             """
         ).fetchall()
 
-    return [JobResponse(
-        job_id=str(row[0]),
-        status=JobStatus(row[1]),
-        total=row[2]
-    ) for row in rows]
+    return [
+        JobResponse(job_id=str(row[0]), status=JobStatus(row[1]), total=row[2])
+        for row in rows
+    ]
+
 
 @app.get("/jobs/{job_id}", response_model=JobResponse)
 def get_job(job_id: str):
@@ -87,8 +81,4 @@ def get_job(job_id: str):
             detail=f"Job {job_id} not found",
         )
 
-    return JobResponse(
-        job_id=str(row[0]),
-        status=JobStatus(row[1]),
-        total=row[2]
-    )
+    return JobResponse(job_id=str(row[0]), status=JobStatus(row[1]), total=row[2])

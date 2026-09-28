@@ -1,7 +1,8 @@
 from pydantic import BaseModel
 from shared.models.job_status import JobStatus
 
+
 class JobResponse(BaseModel):
     job_id: str
     status: JobStatus
-    total: int | None = None 
+    total: int | None = None

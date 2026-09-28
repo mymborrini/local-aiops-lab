@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
-class JobRequest(BaseModel):
 
+class JobRequest(BaseModel):
     numbers: list[float]

@@ -1,19 +1,17 @@
-from shared.postgres import PsqlClient    
 from shared.postgres import PsqlClient
-from shared.models import JobResponse, JobStatus
+from shared.postgres import PsqlClient
+from shared.models import JobResponse, JobStatus, Job
 import json
+import time
 
-    
 
-
-class JobRepository(PsqlClient):
-
+class PsqlJobRepository(PsqlClient):
     def __init__(self):
         super().__init__()
 
     def update_status(self, job_id: str, status: str):
-
-         with self.get_connection() as conn:
+        time.sleep(3)
+        with self.get_connection() as conn:
             conn.execute(
                 """
                 UPDATE jobs
@@ -24,7 +22,7 @@ class JobRepository(PsqlClient):
             )
 
     def update_total(self, job_id: str, total: int):
-
+        time.sleep(3)
         with self.get_connection() as conn:
             conn.execute(
                 """
@@ -35,20 +33,20 @@ class JobRepository(PsqlClient):
                 (total, job_id),
             )
 
-    def get_job(self, job_id: str) -> JobResponse:
-        with PsqlClient().get_connection() as conn:
+    def get_job(self, job_id: str) -> Job:
+        with self.get_connection() as conn:
             row = conn.execute(
-                    """
+                """
                     SELECT job_id, numbers, total, status
                     FROM jobs
                     WHERE job_id = %s
                     """,
-                    (job_id,),
-                ).fetchone()
+                (job_id,),
+            ).fetchone()
 
-        return JobResponse(
+        return Job(
             job_id=str(row[0]),
             status=JobStatus(row[3]),
             total=row[2],
-            numbers=json.loads(row[1])
-        ) 
+            numbers=row[1],
+        )

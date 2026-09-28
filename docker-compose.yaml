@@ -7,8 +7,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - redis
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     container_name: app
 
   worker:
@@ -23,6 +25,11 @@ services:
   redis:
     image: redis:8-alpine
     container_name: redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
   
   postgres:
     image: postgres:18-alpine
@@ -31,5 +38,11 @@ services:
       POSTGRES_DB: jobs
       POSTGRES_USER: jobs
       POSTGRES_PASSWORD: jobs
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "db_prod"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
 
         

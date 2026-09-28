@@ -1,7 +1,7 @@
 from shared.postgres import PsqlClient
 
-class DBInitializer(PsqlClient):
 
+class DBInitializer(PsqlClient):
     def __init__(self):
         super().__init__()
 
@@ -16,4 +16,4 @@ class DBInitializer(PsqlClient):
                     status VARCHAR(20) NOT NULL
                 )
                 """
-            ) 
+            )

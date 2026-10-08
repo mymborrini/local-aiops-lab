@@ -5,6 +5,7 @@ from shared.redis import RedisJobRepository
 from shared.postgres import PsqlJobRepository
 from shared.models import Job
 from shared.config.app_properties import MAX_ATTEMPTS
+import random
 
 class JobProcessor:
     def __init__(self):
@@ -58,7 +59,8 @@ class JobProcessor:
         try:
             time.sleep(5)
 
-            raise Exception("Something went wrong")
+            if random.randint(1,6) == 6:
+                raise Exception("Something went wrong")
 
             self.psql_job_repo.complete_job(job_id=job_id, total=total, event_id=event_id)
 

@@ -7,3 +7,4 @@ class Job(BaseModel):
     status: JobStatus
     total: int | None = None
     numbers: list[float]
+    attempts: int

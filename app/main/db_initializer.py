@@ -13,7 +13,8 @@ class DBInitializer(PsqlClient):
                     job_id UUID PRIMARY KEY,
                     numbers JSONB NOT NULL,
                     total BIGINT,
-                    status VARCHAR(20) NOT NULL
+                    status VARCHAR(20) NOT NULL,
+                    attempts INTEGER NOT NULL DEFAULT 0
                 )
                 """
             )
@@ -29,6 +30,17 @@ class DBInitializer(PsqlClient):
                     payload JSONB NOT NULL,
                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     processed_at TIMESTAMP NULL
+                )
+                """
+            )
+
+    def processed_event(self):
+        with self.get_connection() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS processed_events (
+                    event_id BIGINT PRIMARY KEY,
+                    processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
                 """
             )

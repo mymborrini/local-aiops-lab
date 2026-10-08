@@ -16,6 +16,8 @@ async def lifespan(app: FastAPI):
     print("Job table initialized")
     db_initializer.init_outbox()
     print("Outbox table initialized")
+    db_initializer.processed_event()
+    print("Processed event initialized")
     print("DB Initialized", flush=True)
     yield
 
@@ -32,8 +34,6 @@ def health_endpoint():
 def create_job_endpoint(request: JobRequest):
     job_id = str(uuid4())
     psql_job_repo = PsqlJobRepository()
-    redis_job_repo = RedisJobRepository()
-
     print(f"Process JOB ID: {job_id}")
 
     print("Save in PSQL DB")

@@ -9,35 +9,12 @@ class PsqlJobRepository(PsqlClient):
     def __init__(self):
         super().__init__()
 
-    def update_status(self, job_id: str, status: str):
-        time.sleep(3)
-        with self.get_connection() as conn:
-            conn.execute(
-                """
-                UPDATE jobs
-                SET status = %s
-                WHERE job_id = %s
-                """,
-                (status, job_id),
-            )
-
-    def update_total(self, job_id: str, total: int):
-        time.sleep(3)
-        with self.get_connection() as conn:
-            conn.execute(
-                """
-                UPDATE jobs
-                SET total = %s
-                WHERE job_id = %s
-                """,
-                (total, job_id),
-            )
 
     def get_job(self, job_id: str) -> Job:
         with self.get_connection() as conn:
             row = conn.execute(
                 """
-                    SELECT job_id, numbers, total, status
+                    SELECT job_id, numbers, total, status, attempts
                     FROM jobs
                     WHERE job_id = %s
                     """,
@@ -53,6 +30,7 @@ class PsqlJobRepository(PsqlClient):
             status=JobStatus(row[3]),
             total=row[2],
             numbers=json.loads(row[1]),
+            attempts=row[4]
         )
 
     def get_all_jobs(self) -> list[JobResponse]:
@@ -108,3 +86,61 @@ class PsqlJobRepository(PsqlClient):
                 ),
             )
             
+
+    def is_event_processed(self, event_id: int):
+        with self.get_connection() as conn:
+             row = conn.execute(
+                """
+                SELECT 1
+                FROM processed_events
+                WHERE event_id = %s
+                """,
+                (event_id,),
+            ).fetchone()
+
+        return row is not None
+
+
+    def complete_job(self, job_id: str, event_id: int, total: int):
+        with self.get_connection() as conn:
+            conn.execute(
+                """
+                UPDATE jobs
+                SET status = %s,
+                    total = %s
+                WHERE job_id = %s
+                """,
+                ("COMPLETED", total, job_id),
+            )
+
+            conn.execute(
+                """
+                INSERT INTO processed_events (event_id)
+                VALUES (%s)
+                ON CONFLICT (event_id) DO NOTHING
+                """,
+                (event_id,),
+            )
+
+    def start_job(self, job_id: str):
+        with self.get_connection() as conn:
+            conn.execute(
+                """
+                UPDATE jobs
+                SET status = %s,
+                    attempts = attempts + 1
+                WHERE job_id = %s
+                """,
+                ("RUNNING", job_id),
+            )
+
+    def fail_job(self, job_id: str):
+        with self.get_connection() as conn:
+            conn.execute(
+                """
+                UPDATE jobs
+                SET status = %s
+                WHERE job_id = %s
+                """,
+                ("FAILED", job_id),
+            )

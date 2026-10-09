@@ -1,8 +1,18 @@
 global:
-  scrape_interval: 1800s
+  scrape_interval: 15s
 
 scrape_configs:
   - job_name: "app"
     metrics_path: /metrics
     static_configs:
       - targets: ["app:8000"]
+  
+  - job_name: "outbox_processor"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["outbox_processor:8001"]
+
+  - job_name: "job_processor"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["job_processor:8001"]

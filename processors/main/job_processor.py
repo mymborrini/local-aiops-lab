@@ -6,6 +6,8 @@ from shared.postgres import PsqlJobRepository
 from shared.models import Job
 from shared.config.app_properties import MAX_ATTEMPTS
 import random
+import processors.main.monitoring.job_metrics as JOB_METRIC
+from prometheus_client import start_http_server
 
 
 class JobProcessor:
@@ -17,6 +19,7 @@ class JobProcessor:
         print("Process Job Initialization Complete", flush=True)
 
     def main(self):
+        start_http_server(8001)
         print(
             f"Start retrieving jobs from queue {RedisCLient.JOBS_QUEUE_NAME}",
             flush=True,
@@ -51,39 +54,51 @@ class JobProcessor:
             print(f"Job {job_id} already completed")
             return
 
-        self.psql_job_repo.start_job(job_id=job_id)
+        with JOB_METRIC.JOB_PROCESSING_DURATION.time():
 
-        print(f"Job {job_id} is RUNNING", flush=True)
+            self.psql_job_repo.start_job(job_id=job_id)
+            JOB_METRIC.JOBS_RUNNING.inc()
 
-        # Simulate some operations
+            print(f"Job {job_id} is RUNNING", flush=True)
 
-        total = sum(job.numbers)
+            # Simulate some operations
 
-        try:
-            time.sleep(5)
+            try:
+                total = sum(job.numbers)
+                time.sleep(5)
 
-            if random.randint(1, 6) == 6:
-                raise Exception("Something went wrong")
+                r: int = random.randint(1, 3)
+                print(f"Job {job_id} lucky number is....{r}", flush=True)
+                if r == 2:
+                    raise Exception("Something went wrong")
 
-            self.psql_job_repo.complete_job(
-                job_id=job_id, total=total, event_id=event_id
-            )
-
-            print(f"Job {job_id} is COMPLETED with total {total}", flush=True)
-        except Exception as exc:
-            print(f"Job {job_id} failed: {exc}")
-            self.psql_job_repo.fail_job(job_id=job_id)
-
-            if job.attempts < MAX_ATTEMPTS:
-                self.redis_job_repo.push_job(job_id=job_id, event_id=event_id)
-
-                print(
-                    f"Job {job_id} queued for retry "
-                    f"({job.attempts + 1}/{MAX_ATTEMPTS})",
-                    flush=True,
+                self.psql_job_repo.complete_job(
+                    job_id=job_id, total=total, event_id=event_id
                 )
-            else:
-                print(f"Job {job_id} reached maximum attempts", flush=True)
+
+                JOB_METRIC.JOBS_PROCESSED.labels(result="success").inc()
+
+                print(f"Job {job_id} is COMPLETED with total {total}", flush=True)
+            except Exception as exc:
+
+                JOB_METRIC.JOBS_PROCESSED.labels(result="failure").inc()
+                print(f"Job {job_id} failed: {exc}")
+                self.psql_job_repo.fail_job(job_id=job_id)
+
+                if job.attempts < MAX_ATTEMPTS:
+                    self.redis_job_repo.push_job(job_id=job_id, event_id=event_id)
+
+                    JOB_METRIC.JOB_RETRIES.inc()
+
+                    print(
+                        f"Job {job_id} queued for retry "
+                        f"({job.attempts + 1}/{MAX_ATTEMPTS})",
+                        flush=True,
+                    )
+                else:
+                    print(f"Job {job_id} reached maximum attempts", flush=True)
+            finally:
+                JOB_METRIC.JOBS_RUNNING.dec()
 
 
 if __name__ == "__main__":

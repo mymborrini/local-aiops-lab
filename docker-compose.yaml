@@ -19,23 +19,27 @@ services:
       retries: 3
       start_period: 10s
 
-  outbox-processor:
+  outbox_processor:
     build:
       context: .
       dockerfile: Dockerfile.outbox-processor
+    ports:
+     - 8001
     depends_on:
       app:
         condition: service_healthy
-    container_name: outbox-processor
+    container_name: outbox_processor
 
-  job-processor:
+  job_processor:
     build:
       context: .
       dockerfile: Dockerfile.job-processor
+    ports:
+     - 8001
     depends_on:
       app:
         condition: service_healthy
-    container_name: job-processor
+    container_name: job_processor
 
   redis:
     image: redis:8-alpine
@@ -67,10 +71,8 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
-    restart: unless-stopped
     depends_on:
       app:
         condition: service_healthy

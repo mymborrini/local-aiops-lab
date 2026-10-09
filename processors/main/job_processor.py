@@ -55,7 +55,6 @@ class JobProcessor:
             return
 
         with JOB_METRIC.JOB_PROCESSING_DURATION.time():
-
             self.psql_job_repo.start_job(job_id=job_id)
             JOB_METRIC.JOBS_RUNNING.inc()
 
@@ -80,7 +79,6 @@ class JobProcessor:
 
                 print(f"Job {job_id} is COMPLETED with total {total}", flush=True)
             except Exception as exc:
-
                 JOB_METRIC.JOBS_PROCESSED.labels(result="failure").inc()
                 print(f"Job {job_id} failed: {exc}")
                 self.psql_job_repo.fail_job(job_id=job_id)

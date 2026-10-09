@@ -27,16 +27,12 @@ class OutBoxProcessor:
 
                 self.psql_outbox_repo.mark_outbox_event_processed(event_id)
 
-                OUTBOX_METRIC.OUTBOX_EVENTS_PROCESSED.labels(
-                    result="success"
-                ).inc()
+                OUTBOX_METRIC.OUTBOX_EVENTS_PROCESSED.labels(result="success").inc()
 
                 print(f"Outbox event {event_id} job {job_id} processed", flush=True)
 
             except Exception as exc:
-                OUTBOX_METRIC.OUTBOX_EVENTS_PROCESSED.labels(
-                    result="failure"
-                ).inc()
+                OUTBOX_METRIC.OUTBOX_EVENTS_PROCESSED.labels(result="failure").inc()
 
                 print(f"Failed to process outbox event {event_id}: {exc}")
 

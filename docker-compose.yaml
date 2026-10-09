@@ -68,7 +68,7 @@ services:
     image: prom/prometheus:v3.1.0
     container_name: prometheus
     ports:
-      - "9090:9090"
+      - 9090
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     command:
@@ -77,6 +77,13 @@ services:
       app:
         condition: service_healthy
 
-volumes:
-  prometheus_data:
+  grafana:
+    image: grafana/grafana:9.0.0
+    container_name: grafana
+    ports:
+      - 3000
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
   

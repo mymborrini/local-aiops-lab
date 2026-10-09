@@ -4,9 +4,10 @@ from starlette.requests import Request
 from starlette.responses import Response
 import time
 
+
 async def prometheus_middleware(
-        request: Request,
-        call_next,
+    request: Request,
+    call_next,
 ) -> Response:
 
     start_time = time.perf_counter()

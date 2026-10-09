@@ -4,6 +4,7 @@ from app.main.db_initializer import DBInitializer
 from app.main.api import jobs_router, health_router, metrics_router
 from app.main.monitoring.middleware import prometheus_middleware
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("DB Initializing...", flush=True)

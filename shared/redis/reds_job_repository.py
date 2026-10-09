@@ -1,6 +1,7 @@
 from shared.redis import RedisCLient
 from shared.models import RedisMessage
 
+
 class RedisJobRepository(RedisCLient):
     def __init__(self):
         super().__init__()
@@ -13,10 +14,6 @@ class RedisJobRepository(RedisCLient):
 
     def push_job(self, job_id: str, event_id: str):
 
-        message = RedisMessage(
-            event_id=event_id,
-            job_id=job_id
-        )
+        message = RedisMessage(event_id=event_id, job_id=job_id)
 
         self.instance.rpush(RedisCLient.JOBS_QUEUE_NAME, message.model_dump_json())
-        

@@ -1,10 +1,9 @@
 from shared.postgres import PsqlClient
 
-class PsqlOutBoxRepository(PsqlClient):
 
+class PsqlOutBoxRepository(PsqlClient):
     def __init__(self):
         super().__init__()
-
 
     def get_pending_outbox_events(self):
         with self.get_connection() as conn:

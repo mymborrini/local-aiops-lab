@@ -1,8 +1,8 @@
 import psycopg
 from shared.config.app_properties import *
 
-class PsqlClient:
 
+class PsqlClient:
     def get_connection(self):
         return psycopg.connect(
             host=POSTGRES_HOST,

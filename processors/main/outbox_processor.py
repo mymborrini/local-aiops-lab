@@ -2,8 +2,8 @@ from shared.postgres.psql_outbox_repository import PsqlOutBoxRepository
 from shared.redis.reds_job_repository import RedisJobRepository
 import time
 
-class OutBoxProcessor:
 
+class OutBoxProcessor:
     def __init__(self):
         self.psql_outbox_repo = PsqlOutBoxRepository()
         self.redis_job_repo = RedisJobRepository()
@@ -31,6 +31,7 @@ class OutBoxProcessor:
             self.process_outbox()
             time.sleep(30)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print("Out box Processor Start", flush=True)
     OutBoxProcessor().main()

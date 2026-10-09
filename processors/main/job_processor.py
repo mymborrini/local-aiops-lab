@@ -7,6 +7,7 @@ from shared.models import Job
 from shared.config.app_properties import MAX_ATTEMPTS
 import random
 
+
 class JobProcessor:
     def __init__(self):
         super().__init__()
@@ -29,7 +30,10 @@ class JobProcessor:
 
             print(f"Received message from reds: {redisMessage}")
 
-            print(f"Received job {redisMessage.job_id} event {redisMessage.event_id}", flush=True)
+            print(
+                f"Received job {redisMessage.job_id} event {redisMessage.event_id}",
+                flush=True,
+            )
 
             self._process(redisMessage.job_id, redisMessage.event_id)
 
@@ -47,23 +51,23 @@ class JobProcessor:
             print(f"Job {job_id} already completed")
             return
 
-
         self.psql_job_repo.start_job(job_id=job_id)
 
         print(f"Job {job_id} is RUNNING", flush=True)
 
         # Simulate some operations
-       
+
         total = sum(job.numbers)
 
         try:
             time.sleep(5)
 
-            if random.randint(1,6) == 6:
+            if random.randint(1, 6) == 6:
                 raise Exception("Something went wrong")
 
-            self.psql_job_repo.complete_job(job_id=job_id, total=total, event_id=event_id)
-
+            self.psql_job_repo.complete_job(
+                job_id=job_id, total=total, event_id=event_id
+            )
 
             print(f"Job {job_id} is COMPLETED with total {total}", flush=True)
         except Exception as exc:
@@ -72,16 +76,14 @@ class JobProcessor:
 
             if job.attempts < MAX_ATTEMPTS:
                 self.redis_job_repo.push_job(job_id=job_id, event_id=event_id)
-            
+
                 print(
                     f"Job {job_id} queued for retry "
-                    f"({job.attempts + 1}/{MAX_ATTEMPTS})", flush=True
+                    f"({job.attempts + 1}/{MAX_ATTEMPTS})",
+                    flush=True,
                 )
             else:
-                print(
-                    f"Job {job_id} reached maximum attempts", flush=True
-                )
-
+                print(f"Job {job_id} reached maximum attempts", flush=True)
 
 
 if __name__ == "__main__":

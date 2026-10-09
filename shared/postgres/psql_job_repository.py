@@ -5,10 +5,10 @@ import json
 import time
 from uuid import UUID
 
+
 class PsqlJobRepository(PsqlClient):
     def __init__(self):
         super().__init__()
-
 
     def get_job(self, job_id: str) -> Job:
         with self.get_connection() as conn:
@@ -23,30 +23,28 @@ class PsqlJobRepository(PsqlClient):
 
         if row is None:
             return None
-        
 
         return Job(
             job_id=str(row[0]),
             status=JobStatus(row[3]),
             total=row[2],
             numbers=json.loads(row[1]),
-            attempts=row[4]
+            attempts=row[4],
         )
 
     def get_all_jobs(self) -> list[JobResponse]:
         with self.get_connection() as conn:
-                rows = conn.execute(
-                    """
+            rows = conn.execute(
+                """
                     SELECT job_id, status, total
                     FROM jobs
                     """
-                ).fetchall()
+            ).fetchall()
 
         return [
-                JobResponse(job_id=str(row[0]), status=JobStatus(row[1]), total=row[2])
-                for row in rows
-            ]
-
+            JobResponse(job_id=str(row[0]), status=JobStatus(row[1]), total=row[2])
+            for row in rows
+        ]
 
     def create_job(
         self,
@@ -69,7 +67,6 @@ class PsqlJobRepository(PsqlClient):
                 ),
             )
 
-
             conn.execute(
                 """
                 INSERT INTO outbox (job_id, event_type, payload)
@@ -85,11 +82,10 @@ class PsqlJobRepository(PsqlClient):
                     ),
                 ),
             )
-            
 
     def is_event_processed(self, event_id: int):
         with self.get_connection() as conn:
-             row = conn.execute(
+            row = conn.execute(
                 """
                 SELECT 1
                 FROM processed_events
@@ -99,7 +95,6 @@ class PsqlJobRepository(PsqlClient):
             ).fetchone()
 
         return row is not None
-
 
     def complete_job(self, job_id: str, event_id: int, total: int):
         with self.get_connection() as conn:

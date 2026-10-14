@@ -1,5 +1,6 @@
 from shared.postgres import PsqlClient
 
+
 class DBInitializer(PsqlClient):
     def __init__(self):
         super().__init__()

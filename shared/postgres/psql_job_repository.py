@@ -2,7 +2,6 @@ from shared.postgres import PsqlClient
 from shared.postgres import PsqlClient
 from shared.models import JobStatus, Job, JobResponse
 import json
-import time
 from uuid import UUID
 
 
@@ -47,10 +46,7 @@ class PsqlJobRepository(PsqlClient):
         ]
 
     def create_job(
-        self,
-        job_id: UUID,
-        numbers: list[float],
-        status: str,
+        self, job_id: UUID, numbers: list[float], status: str, correlation_id: UUID
     ):
 
         # With get_connection + Exception -> Everything is rolled back
@@ -76,9 +72,7 @@ class PsqlJobRepository(PsqlClient):
                     job_id,
                     "JOB_CREATED",
                     json.dumps(
-                        {
-                            "job_id": str(job_id),
-                        }
+                        {"job_id": str(job_id), "correlation_id": str(correlation_id)}
                     ),
                 ),
             )

@@ -8,7 +8,7 @@ from shared.config import AiOpsLog, configure_logging
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    log = AiOpsLog(__name__) 
+    log = AiOpsLog(__name__)
     log.info("DB Initializing...")
     db_initializer = DBInitializer()
     db_initializer.init_job()

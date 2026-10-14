@@ -12,8 +12,10 @@ class RedisJobRepository(RedisCLient):
             return None
         return RedisMessage.model_validate_json(response[1])
 
-    def push_job(self, job_id: str, event_id: str):
+    def push_job(self, job_id: str, event_id: str, correlation_id: str):
 
-        message = RedisMessage(event_id=event_id, job_id=job_id)
+        message = RedisMessage(
+            event_id=event_id, job_id=job_id, correlation_id=correlation_id
+        )
 
         self.instance.rpush(RedisCLient.JOBS_QUEUE_NAME, message.model_dump_json())

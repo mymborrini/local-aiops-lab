@@ -13,19 +13,27 @@ class JobService:
 
     def create_job(self, request: JobRequest) -> str:
         job_id = str(uuid4())
+        correlation_id = uuid4()
 
         self.log.info(
-            f"Process JOB ID: {job_id}", job_id=job_id, status=JobStatus.PENDING
+            f"Process JOB ID: {job_id}",
+            job_id=job_id,
+            status=JobStatus.PENDING,
+            correlation_id=correlation_id,
         )
 
         self.psql_job_repo.create_job(
             job_id,
             json.dumps(request.numbers),
             JobStatus.PENDING.value,
+            correlation_id=correlation_id,
         )
 
         self.log.info(
-            f"JOB ID: {job_id} Save in PSQL DB", job_id=job_id, status=JobStatus.PENDING
+            f"JOB ID: {job_id} Save in PSQL DB",
+            job_id=job_id,
+            status=JobStatus.PENDING,
+            correlation_id=correlation_id,
         )
 
         return job_id

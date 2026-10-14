@@ -1,6 +1,7 @@
 from shared.postgres import PsqlJobRepository
 from uuid import uuid4
 import json
+from shared.config import AiOpsLog
 
 from shared.models import JobRequest, JobResponse, JobStatus
 
@@ -8,11 +9,14 @@ from shared.models import JobRequest, JobResponse, JobStatus
 class JobService:
     def __init__(self, psql_job_repo: PsqlJobRepository):
         self.psql_job_repo = psql_job_repo
+        self.log = AiOpsLog(__name__)
 
     def create_job(self, request: JobRequest) -> str:
         job_id = str(uuid4())
 
-        print(f"Process JOB ID: {job_id}")
+        self.log.info(
+            f"Process JOB ID: {job_id}", job_id=job_id, status=JobStatus.PENDING
+        )
 
         self.psql_job_repo.create_job(
             job_id,
@@ -20,7 +24,9 @@ class JobService:
             JobStatus.PENDING.value,
         )
 
-        print(f"JOB ID: {job_id} Save in PSQL DB")
+        self.log.info(
+            f"JOB ID: {job_id} Save in PSQL DB", job_id=job_id, status=JobStatus.PENDING
+        )
 
         return job_id
 

@@ -7,7 +7,7 @@ run-app:
 	uvicorn app.main.fast_api_app:app --reload
 
 docker-up:
-	docker compose up -d
+	docker compose up --build app --build outbox_processor --build job_processor -d 
 
 docker-down:
 	docker compose down

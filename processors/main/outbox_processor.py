@@ -3,12 +3,15 @@ from shared.redis.reds_job_repository import RedisJobRepository
 import time
 import processors.main.monitoring.outbox_metrics as OUTBOX_METRIC
 from prometheus_client import start_http_server
+from shared.config import AiOpsLog, configure_logging
+from shared.models import JobStatus
 
 
 class OutBoxProcessor:
     def __init__(self):
         self.psql_outbox_repo = PsqlOutBoxRepository()
         self.redis_job_repo = RedisJobRepository()
+        self.log = AiOpsLog("processor.main.outbox_processor")
 
     def process_outbox(self):
         with OUTBOX_METRIC.OUTBOX_PROCESSING_DURATION.time():
@@ -20,7 +23,7 @@ class OutBoxProcessor:
         OUTBOX_METRIC.OUTBOX_PENDING_EVENTS.set(len(events))
 
         for event_id, job_id, event_type, payload in events:
-            print(f"Processing outbox event {event_id} job {job_id}", flush=True)
+            self.log.info(f"Processing outbox event {event_id} job {job_id}", job_id=job_id, event_id=event_id, status=JobStatus.PENDING)
 
             try:
                 self.redis_job_repo.push_job(job_id=str(job_id), event_id=str(event_id))
@@ -29,15 +32,15 @@ class OutBoxProcessor:
 
                 OUTBOX_METRIC.OUTBOX_EVENTS_PROCESSED.labels(result="success").inc()
 
-                print(f"Outbox event {event_id} job {job_id} processed", flush=True)
+                self.log.info(f"Outbox event {event_id} job {job_id} processed", job_id=job_id, event_id=event_id, status=JobStatus.PENDING)
 
             except Exception as exc:
                 OUTBOX_METRIC.OUTBOX_EVENTS_PROCESSED.labels(result="failure").inc()
 
-                print(f"Failed to process outbox event {event_id}: {exc}")
+                self.log.info(f"Failed to process outbox event {event_id}: {exc}", job_id=job_id, event_id=event_id, status=JobStatus.PENDING)
 
     def main(self):
-        print("Outbox processor started", flush=True)
+        self.log.info("Outbox processor started")
 
         start_http_server(8001)
         while True:
@@ -46,5 +49,5 @@ class OutBoxProcessor:
 
 
 if __name__ == "__main__":
-    print("Out box Processor Start", flush=True)
+    configure_logging()
     OutBoxProcessor().main()

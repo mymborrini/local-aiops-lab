@@ -10,5 +10,9 @@ REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 MAX_ATTEMPTS = int(os.getenv("MAX_ATTEMPTS", "3"))
 
-LOKI_URL = os.getenv("LOKI_URL", None) 
+LOKI_URL = os.getenv("LOKI_URL", None)
 SERVICE_NAME = os.getenv("SERVICE_NAME", "app")
+OTEL_SERVICE_NAME = os.getenv("OTEL_SERVICE_NAME", "app")
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = os.getenv(
+    "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", None
+)

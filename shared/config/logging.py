@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 import urllib
 import os
 from shared.config.app_properties import SERVICE_NAME, LOKI_URL
+from opentelemetry import trace
+
 
 class JsonFormatter(logging.Formatter):
     RESERVED = {
@@ -41,6 +43,12 @@ class JsonFormatter(logging.Formatter):
             "message": record.getMessage(),
         }
 
+        span_context = trace.get_current_span().get_span_context()
+
+        if span_context.is_valid:
+            log_entry["trace_id"] = format(span_context.trace_id, "032x")
+            log_entry["span_id"] = format(span_context.span_id, "016x")
+
         for key, value in record.__dict__.items():
             if key not in self.RESERVED and not key.startswith("_"):
                 log_entry[key] = value
@@ -52,7 +60,6 @@ class JsonFormatter(logging.Formatter):
 
 
 class LokiHandler(logging.Handler):
-
     def __init__(self, url: str, service: str):
         super().__init__()
         self.url = f"{url.rstrip('/')}/loki/api/v1/push"
@@ -106,11 +113,10 @@ class AiOpsLog:
 def configure_logging() -> None:
     formatter = JsonFormatter()
     console_handler = logging.StreamHandler()
-    
+
     console_handler.setFormatter(formatter)
     handlers = [console_handler]
 
-   
     if LOKI_URL:
         loki_handler = LokiHandler(
             url=LOKI_URL,

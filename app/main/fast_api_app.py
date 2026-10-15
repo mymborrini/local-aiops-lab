@@ -3,7 +3,8 @@ from contextlib import asynccontextmanager
 from app.main.db_initializer import DBInitializer
 from app.main.api import jobs_router, health_router, metrics_router
 from app.main.monitoring.middleware import prometheus_middleware
-from shared.config import AiOpsLog, configure_logging
+from shared.config import AiOpsLog, configure_logging, configure_tracing
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 
 @asynccontextmanager
@@ -22,9 +23,11 @@ async def lifespan(app: FastAPI):
 
 
 configure_logging()
+configure_tracing()
 app = FastAPI(title="AIOps Lab", lifespan=lifespan)
 
 app.middleware("http")(prometheus_middleware)
 app.include_router(health_router)
 app.include_router(jobs_router)
 app.include_router(metrics_router)
+FastAPIInstrumentor.instrument_app(app)

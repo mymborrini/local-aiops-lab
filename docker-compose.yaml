@@ -11,10 +11,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      loki:
+        condition: service_healthy
+      tempo:
+        condition: service_healthy
     container_name: app
     environment:
       LOKI_URL: http://loki:3100
       SERVICE_NAME: app
+      OTEL_SERVICE_NAME: app
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://tempo:4318/v1/traces
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
       interval: 1h
@@ -89,12 +95,35 @@ services:
   loki:
     image: grafana/loki:3.7.0
     ports:
-      - "3100:3100"
+      - 3100
     command:
       - "-config.file=/etc/loki/loki-config.yml"
     volumes:
       - ./observability_configs/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
     container_name: loki
+    healthcheck:
+      test: ["CMD", "/usr/bin/loki", "-health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  tempo:
+    image: grafana/tempo:3.1.0
+    command:
+      - "-config.file=/etc/tempo/tempo.yml"
+    container_name: tempo
+    ports:
+      - 3200
+      - 4318
+    volumes:
+      - ./observability_configs/tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+    healthcheck:
+      test: ["CMD", "/tempo", "--health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   grafana:
     image: grafana/grafana:9.0.0
@@ -106,4 +135,5 @@ services:
     depends_on:
       - prometheus
       - loki
+      - tempo
   

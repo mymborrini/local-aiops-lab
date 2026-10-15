@@ -12,6 +12,9 @@ services:
       redis:
         condition: service_healthy
     container_name: app
+    environment:
+      LOKI_URL: http://loki:3100
+      SERVICE_NAME: app
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
       interval: 1h
@@ -25,6 +28,9 @@ services:
       dockerfile: Dockerfile.outbox-processor
     ports:
      - 8001
+    environment:
+      LOKI_URL: http://loki:3100
+      SERVICE_NAME: outbox_processor
     depends_on:
       app:
         condition: service_healthy
@@ -36,6 +42,9 @@ services:
       dockerfile: Dockerfile.job-processor
     ports:
      - 8001
+    environment:
+      LOKI_URL: http://loki:3100
+      SERVICE_NAME: job_processor
     depends_on:
       app:
         condition: service_healthy
@@ -70,12 +79,22 @@ services:
     ports:
       - 9090
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability_configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     depends_on:
       app:
         condition: service_healthy
+  
+  loki:
+    image: grafana/loki:3.7.0
+    ports:
+      - "3100:3100"
+    command:
+      - "-config.file=/etc/loki/loki-config.yml"
+    volumes:
+      - ./observability_configs/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+    container_name: loki
 
   grafana:
     image: grafana/grafana:9.0.0
@@ -83,7 +102,8 @@ services:
     ports:
       - 3000
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability_configs/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
+      - loki
   

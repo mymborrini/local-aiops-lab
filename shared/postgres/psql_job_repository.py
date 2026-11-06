@@ -46,7 +46,12 @@ class PsqlJobRepository(PsqlClient):
         ]
 
     def create_job(
-        self, job_id: UUID, numbers: list[float], status: str, correlation_id: UUID, trace_context
+        self,
+        job_id: UUID,
+        numbers: list[float],
+        status: str,
+        correlation_id: UUID,
+        trace_context,
     ):
 
         # With get_connection + Exception -> Everything is rolled back
@@ -72,7 +77,11 @@ class PsqlJobRepository(PsqlClient):
                     job_id,
                     "JOB_CREATED",
                     json.dumps(
-                        {"job_id": str(job_id), "correlation_id": str(correlation_id), "trace_context": trace_context}
+                        {
+                            "job_id": str(job_id),
+                            "correlation_id": str(correlation_id),
+                            "trace_context": trace_context,
+                        }
                     ),
                 ),
             )

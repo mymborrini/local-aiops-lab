@@ -2,7 +2,12 @@ import json
 import logging
 from datetime import datetime, timezone
 import urllib
-from shared.config.app_properties import SERVICE_NAME, LOKI_URL, OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, OTEL_SERVICE_NAME
+from shared.config.app_properties import (
+    SERVICE_NAME,
+    LOKI_URL,
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_SERVICE_NAME,
+)
 from opentelemetry import trace
 
 from opentelemetry import _logs
@@ -121,20 +126,19 @@ class AiOpsLog:
             for key, value in kwargs.items()
         }
 
-class OTLPHanlder:
 
+class OTLPHanlder:
     def __init__(self, endpoint: str, service: str):
         self.endpoint = endpoint
         self.service = service
 
     def configure_otel_handler(self):
-        if (OTEL_EXPORTER_OTLP_LOGS_ENDPOINT is None):
+        if OTEL_EXPORTER_OTLP_LOGS_ENDPOINT is None:
             return
 
-        resource = Resource.create({
-            "service.name": SERVICE_NAME,
-            "deployment.environment.name": "local"
-        })
+        resource = Resource.create(
+            {"service.name": SERVICE_NAME, "deployment.environment.name": "local"}
+        )
 
         logging_provider = LoggerProvider(resource=resource)
         exporter = OTLPLogExporter(endpoint=OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)
@@ -145,11 +149,7 @@ class OTLPHanlder:
         )
 
         _logs.set_logger_provider(logger_provider=logging_provider)
-        return LoggingHandler(
-            level=logging.INFO,
-            logger_provider=logging_provider
-        )
-
+        return LoggingHandler(level=logging.INFO, logger_provider=logging_provider)
 
 
 def configure_logging() -> None:
@@ -168,7 +168,9 @@ def configure_logging() -> None:
         handlers.append(loki_handler)
 
     elif OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:
-        otlp_handler = OTLPHanlder(endpoint=OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, service=SERVICE_NAME).configure_otel_handler()
+        otlp_handler = OTLPHanlder(
+            endpoint=OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, service=SERVICE_NAME
+        ).configure_otel_handler()
         handlers.append(otlp_handler)
 
     logging.basicConfig(level=logging.INFO, handlers=handlers, force=True)

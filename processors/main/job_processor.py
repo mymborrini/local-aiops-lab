@@ -73,15 +73,20 @@ class JobProcessor:
             span.set_attribute("outbox.event_id", str(event_id))
 
             try:
-                self._process_job(job_id=job_id, event_id=event_id, correlation_id=correlation_id, trace_context=trace_context)
+                self._process_job(
+                    job_id=job_id,
+                    event_id=event_id,
+                    correlation_id=correlation_id,
+                    trace_context=trace_context,
+                )
             except Exception as exc:
                 span.record_exception(exc)
                 span.set_status(Status(StatusCode.ERROR, str(exc)))
                 raise
 
-        
-
-    def _process_job(self, job_id:str, event_id: str, correlation_id: str, trace_context: any):
+    def _process_job(
+        self, job_id: str, event_id: str, correlation_id: str, trace_context: any
+    ):
         self.log.info(
             f"Processing job {job_id} from {RedisCLient.JOBS_QUEUE_NAME}",
             job_id=job_id,
@@ -161,18 +166,19 @@ class JobProcessor:
                 )
                 self.psql_job_repo.fail_job(job_id=job_id)
 
-                span = trace.get_current_span() 
+                span = trace.get_current_span()
                 span.record_exception(exc)
                 span.set_status(Status(StatusCode.ERROR, str(exc)))
-
-                
 
                 if job.attempts < MAX_ATTEMPTS:
                     next_trace_context = {}
                     propagate.inject(next_trace_context)
 
                     self.redis_job_repo.push_job(
-                        job_id=job_id, event_id=event_id, correlation_id=correlation_id,trace_context=next_trace_context
+                        job_id=job_id,
+                        event_id=event_id,
+                        correlation_id=correlation_id,
+                        trace_context=next_trace_context,
                     )
 
                     JOB_METRIC.JOB_RETRIES.inc()

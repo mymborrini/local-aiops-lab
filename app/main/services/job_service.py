@@ -30,7 +30,7 @@ class JobService:
             json.dumps(request.numbers),
             JobStatus.PENDING.value,
             correlation_id=correlation_id,
-            trace_context=trace_context
+            trace_context=trace_context,
         )
 
         self.log.info(

@@ -8,7 +8,9 @@ from shared.config.app_properties import MAX_ATTEMPTS
 import random
 import processors.main.monitoring.job_metrics as JOB_METRIC
 from prometheus_client import start_http_server
-from shared.config import AiOpsLog, configure_logging
+from shared.config import AiOpsLog, configure_logging, configure_tracing
+from opentelemetry import propagate, trace
+from opentelemetry.trace import Status, StatusCode
 
 
 class JobProcessor:
@@ -19,6 +21,7 @@ class JobProcessor:
         self.redis_job_repo = RedisJobRepository()
         self.psql_job_repo = PsqlJobRepository()
         self.log.info("Process Job Initialization Complete")
+        self.tracer = trace.get_tracer(__name__)
 
     def main(self):
         start_http_server(8001)
@@ -40,11 +43,14 @@ class JobProcessor:
                 correlation_id=redisMessage.correlation_id,
             )
 
-            self._process(
-                redisMessage.job_id, redisMessage.event_id, redisMessage.correlation_id
-            )
+            self._process(redisMessage=redisMessage)
 
-    def _process(self, job_id, event_id, correlation_id):
+    def _process(self, redisMessage: RedisMessage):
+
+        event_id = redisMessage.event_id
+        job_id = redisMessage.job_id
+        correlation_id = redisMessage.correlation_id
+        trace_context = redisMessage.trace_context
 
         if self.psql_job_repo.is_event_processed(event_id=event_id):
             self.log.info(
@@ -55,6 +61,27 @@ class JobProcessor:
             )
             return
 
+        self.log.info(f"Trace context from redis: {trace_context}")
+
+        parent_context = propagate.extract(trace_context or {})
+
+        with self.tracer.start_as_current_span(
+            "job.process",
+            context=parent_context,
+        ) as span:
+            span.set_attribute("job.id", str(job_id))
+            span.set_attribute("outbox.event_id", str(event_id))
+
+            try:
+                self._process_job(job_id=job_id, event_id=event_id, correlation_id=correlation_id, trace_context=trace_context)
+            except Exception as exc:
+                span.record_exception(exc)
+                span.set_status(Status(StatusCode.ERROR, str(exc)))
+                raise
+
+        
+
+    def _process_job(self, job_id:str, event_id: str, correlation_id: str, trace_context: any):
         self.log.info(
             f"Processing job {job_id} from {RedisCLient.JOBS_QUEUE_NAME}",
             job_id=job_id,
@@ -134,9 +161,18 @@ class JobProcessor:
                 )
                 self.psql_job_repo.fail_job(job_id=job_id)
 
+                span = trace.get_current_span() 
+                span.record_exception(exc)
+                span.set_status(Status(StatusCode.ERROR, str(exc)))
+
+                
+
                 if job.attempts < MAX_ATTEMPTS:
+                    next_trace_context = {}
+                    propagate.inject(next_trace_context)
+
                     self.redis_job_repo.push_job(
-                        job_id=job_id, event_id=event_id, correlation_id=correlation_id
+                        job_id=job_id, event_id=event_id, correlation_id=correlation_id,trace_context=next_trace_context
                     )
 
                     JOB_METRIC.JOB_RETRIES.inc()
@@ -163,4 +199,5 @@ class JobProcessor:
 
 if __name__ == "__main__":
     configure_logging()
+    configure_tracing()
     JobProcessor().main()

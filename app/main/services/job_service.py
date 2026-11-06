@@ -4,6 +4,7 @@ import json
 from shared.config import AiOpsLog
 
 from shared.models import JobRequest, JobResponse, JobStatus
+from opentelemetry import propagate
 
 
 class JobService:
@@ -14,6 +15,8 @@ class JobService:
     def create_job(self, request: JobRequest) -> str:
         job_id = str(uuid4())
         correlation_id = uuid4()
+        trace_context = {}
+        propagate.inject(trace_context)
 
         self.log.info(
             f"Process JOB ID: {job_id}",
@@ -27,6 +30,7 @@ class JobService:
             json.dumps(request.numbers),
             JobStatus.PENDING.value,
             correlation_id=correlation_id,
+            trace_context=trace_context
         )
 
         self.log.info(

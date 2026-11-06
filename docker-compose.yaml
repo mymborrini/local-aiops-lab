@@ -37,6 +37,8 @@ services:
     environment:
       LOKI_URL: http://loki:3100
       SERVICE_NAME: outbox_processor
+      OTEL_SERVICE_NAME: "outbox_processor"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://tempo:4318/v1/traces"
     depends_on:
       app:
         condition: service_healthy
@@ -51,6 +53,8 @@ services:
     environment:
       LOKI_URL: http://loki:3100
       SERVICE_NAME: job_processor
+      OTEL_SERVICE_NAME: job_processor
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://tempo:4318/v1/traces
     depends_on:
       app:
         condition: service_healthy

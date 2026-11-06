@@ -5,3 +5,4 @@ class RedisMessage(BaseModel):
     event_id: str
     job_id: str
     correlation_id: str
+    trace_context: object

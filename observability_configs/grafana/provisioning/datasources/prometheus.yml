@@ -8,10 +8,42 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     editable: true
-    
+
   - name: Loki
+    uid: loki
     type: loki
     access: proxy
     url: http://loki:3100
     isDefault: false
     editable: true
+    jsonData:
+      derivedFields:
+        - name: TraceID
+          matcherType: regex
+          matcherRegex: '"trace_id"\s*:\s*"([a-f0-9]{32})"'
+          datasourceUid: tempo
+          url: '$${__value.raw}'
+          urlDisplayLabel: 'View trace in Tempo'
+
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    isDefault: false
+    editable: true
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        tags:
+          - key: service.name
+            value: service
+        filterByTraceID: true
+        filterBySpanID: false
+        customQuery: false
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false

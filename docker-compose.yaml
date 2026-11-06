@@ -11,16 +11,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      loki:
-        condition: service_healthy
-      tempo:
-        condition: service_healthy
     container_name: app
     environment:
       LOKI_URL: http://loki:3100
       SERVICE_NAME: app
       OTEL_SERVICE_NAME: app
-      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://tempo:4318/v1/traces
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
       interval: 1h
@@ -38,7 +34,7 @@ services:
       LOKI_URL: http://loki:3100
       SERVICE_NAME: outbox_processor
       OTEL_SERVICE_NAME: "outbox_processor"
-      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://tempo:4318/v1/traces"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
     depends_on:
       app:
         condition: service_healthy
@@ -54,7 +50,7 @@ services:
       LOKI_URL: http://loki:3100
       SERVICE_NAME: job_processor
       OTEL_SERVICE_NAME: job_processor
-      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://tempo:4318/v1/traces
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
     depends_on:
       app:
         condition: service_healthy
@@ -82,6 +78,19 @@ services:
       timeout: 60s
       retries: 5
       start_period: 80s
+  
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.164.0
+    container_name: otel-collector
+    command:
+      - "--config=/etc/otelcol-contrib/config.yaml"
+    volumes:
+      - ./observability_configs/otel-collector/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - 4317
+      - 4318
+      - 13133
+    
 
   prometheus:
     image: prom/prometheus:v3.1.0

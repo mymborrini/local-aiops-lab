@@ -13,10 +13,10 @@ services:
         condition: service_healthy
     container_name: app
     environment:
-      LOKI_URL: http://loki:3100
       SERVICE_NAME: app
       OTEL_SERVICE_NAME: app
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: http://otel-collector:4318/v1/logs
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
       interval: 1h

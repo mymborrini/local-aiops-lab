@@ -7,7 +7,7 @@ run-app:
 	uvicorn app.main.fast_api_app:app --reload
 
 docker-up:
-	docker compose up --build otel-collector -d
+	docker compose up --build app -d
 
 docker-down:
 	docker compose down

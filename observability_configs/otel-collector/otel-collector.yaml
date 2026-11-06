@@ -8,6 +8,7 @@ receivers:
         endpoint: 0.0.0.0:4318
 
 processors:
+  # Memory limiter is useful to keep otel-collector resource under control. It can refuse spans in case
   memory_limiter:
     check_interval: 1s
     limit_mib: 400
@@ -20,9 +21,14 @@ processors:
 exporters:
   debug:
     verbosity: detailed
+
   
+  # Both for tempo and loki collector add the specific path at the end
   otlphttp/tempo:
     endpoint: http://tempo:4318
+
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
 
 extensions:
   health_check:
@@ -42,3 +48,13 @@ service:
       exporters:
         - debug
         - otlphttp/tempo
+    logs:
+      receivers:
+        - otlp
+      processors:
+        - memory_limiter
+        - batch
+      exporters:
+        - debug
+        - otlphttp/loki
+      

@@ -31,10 +31,10 @@ services:
     ports:
      - 8001
     environment:
-      LOKI_URL: http://loki:3100
       SERVICE_NAME: outbox_processor
       OTEL_SERVICE_NAME: "outbox_processor"
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: http://otel-collector:4318/v1/logs
     depends_on:
       app:
         condition: service_healthy
@@ -47,10 +47,10 @@ services:
     ports:
      - 8001
     environment:
-      LOKI_URL: http://loki:3100
       SERVICE_NAME: job_processor
       OTEL_SERVICE_NAME: job_processor
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: http://otel-collector:4318/v1/logs
     depends_on:
       app:
         condition: service_healthy
@@ -79,17 +79,20 @@ services:
       retries: 5
       start_period: 80s
   
-  otel-collector:
+  otel_collector:
     image: otel/opentelemetry-collector-contrib:0.164.0
     container_name: otel-collector
+    user: "0" # THis is necessary because we have to create the storage file
     command:
       - "--config=/etc/otelcol-contrib/config.yaml"
     volumes:
       - ./observability_configs/otel-collector/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - otel_collector_storage:/var/lib/otelcol/storage
     ports:
       - 4317
       - 4318
       - 13133
+      - 8888 # this one expose metrics to prometheus
     
 
   prometheus:
@@ -149,4 +152,7 @@ services:
       - prometheus
       - loki
       - tempo
-  
+
+
+volumes:
+  otel_collector_storage:

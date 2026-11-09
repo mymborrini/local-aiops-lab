@@ -3,3 +3,5 @@ myvenv/
 
 *.egg-info
 **/__pycache__/**
+
+load_test_results.json

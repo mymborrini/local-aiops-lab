@@ -27,16 +27,59 @@ exporters:
   otlphttp/tempo:
     endpoint: http://tempo:4318
 
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    
+    # This sending queue is just for file_storage so for what is persisted
+    sending_queue:
+      enabled: true
+      num_consumers: 4
+      queue_size: 1000
+      storage: file_storage
+
   otlphttp/loki:
     endpoint: http://loki:3100/otlp
+
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+    sending_queue:
+      enabled: true
+      num_consumers: 4
+      queue_size: 1000
+      storage: file_storage
 
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
 
+  # Persistent the data so in case collector goes down we still have the possibility to recover the informations. Even 
+  # in this case otel use WAL
+  file_storage:
+    directory: /var/lib/otelcol/storage
+    create_directory: true
+
 service:
   extensions:
     - health_check
+    - file_storage
+  
+  # Metamonitoring: We want to expose metrics of this otel-collector
+  telemetry:
+    metrics:
+      level: detailed
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: 0.0.0.0
+                port: 8888
 
   pipelines:
     traces:

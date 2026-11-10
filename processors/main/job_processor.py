@@ -129,7 +129,8 @@ class JobProcessor:
 
             try:
                 total = sum(job.numbers)
-                time.sleep(5)
+                t: int = random.randint(2,6)
+                time.sleep(t)
 
                 r: int = random.randint(1, 3)
                 self.log.info(

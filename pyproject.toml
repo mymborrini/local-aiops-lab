@@ -16,7 +16,9 @@ dependencies = [
     "opentelemetry-instrumentation-logging==0.66b1",
     "opentelemetry-exporter-otlp-proto-http==1.45.1",
     "opentelemetry-api==1.45.1",
-    "opentelemetry-sdk==1.45.1"
+    "opentelemetry-sdk==1.45.1",
+    "pandas==3.1.1",
+    "numpy==2.5.4"
 ]
 
 [project.optional-dependencies]
@@ -25,4 +27,4 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["app","worker","shared"]
+where = ["app","processors","shared","anomaly_lab"]

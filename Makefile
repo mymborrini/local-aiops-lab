@@ -1,4 +1,4 @@
-.PHONY: install run-app docker-up docker-down traffic-generator heavy-load-generator
+.PHONY: install run-app docker-up docker-down traffic-generator heavy-load-generator anomaly-lab
 
 install:
 	pip install -e ".[dev]"
@@ -17,3 +17,6 @@ traffic-generator:
 
 heavy-load-generator:
 	py tests_scripts/heavy_load_generator.py 8000 --request 100 --concurrency 5
+
+anomaly-lab:
+	py anomaly_lab/main.py

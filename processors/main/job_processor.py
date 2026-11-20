@@ -4,7 +4,7 @@ import time
 from shared.redis import RedisJobRepository
 from shared.postgres import PsqlJobRepository
 from shared.models import Job
-from shared.config.app_properties import MAX_ATTEMPTS
+from shared.config.app_properties import MAX_ATTEMPTS, JOB_PROCESSOR_SLOW_DOWN
 import random
 import processors.main.monitoring.job_metrics as JOB_METRIC
 from prometheus_client import start_http_server
@@ -129,7 +129,14 @@ class JobProcessor:
 
             try:
                 total = sum(job.numbers)
-                t: int = random.randint(2,6)
+
+                
+                if JOB_PROCESSOR_SLOW_DOWN:
+                    t: int = random.randint(30,40)
+                    self.log.info(f"Slow mode enabled. Sleeping for {t} seconds")
+                else:
+                    t: int = random.randint(2,6)
+                    self.log.info(f"Fast mode enabled. Sleeping for {t} seconds")
                 time.sleep(t)
 
                 r: int = random.randint(1, 3)

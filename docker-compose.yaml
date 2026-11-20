@@ -38,6 +38,8 @@ services:
     depends_on:
       app:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     container_name: outbox_processor
 
   job_processor:
@@ -49,6 +51,7 @@ services:
     environment:
       SERVICE_NAME: job_processor
       OTEL_SERVICE_NAME: job_processor
+      JOB_PROCESSOR_SLOW_DOWN: "true"
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
       OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: http://otel-collector:4318/v1/logs
     depends_on:

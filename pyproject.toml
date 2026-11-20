@@ -18,7 +18,8 @@ dependencies = [
     "opentelemetry-api==1.45.1",
     "opentelemetry-sdk==1.45.1",
     "pandas==3.1.1",
-    "numpy==2.5.4"
+    "numpy==2.5.4",
+    "matplotlib==3.11.2"
 ]
 
 [project.optional-dependencies]
@@ -27,4 +28,10 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["app","processors","shared","anomaly_lab"]
+where = ["."]
+include = [
+    "app*",
+    "processors*",
+    "shared*",
+    "anomaly_lab*",
+]

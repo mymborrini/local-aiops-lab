@@ -33,5 +33,5 @@ include = [
     "app*",
     "processors*",
     "shared*",
-    "anomaly_lab*",
+    "anomaly_detector*",
 ]

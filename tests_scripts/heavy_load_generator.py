@@ -1,4 +1,3 @@
-
 import argparse
 import json
 import random
@@ -21,10 +20,7 @@ def percentile(values, p):
 
 
 def send_request(base_url, timeout):
-    numbers = [
-        random.randint(1, 100)
-        for _ in range(random.randint(2, 8))
-    ]
+    numbers = [random.randint(1, 100) for _ in range(random.randint(2, 8))]
 
     payload = json.dumps({"numbers": numbers}).encode("utf-8")
 
@@ -91,15 +87,11 @@ def monitor_jobs(base_url, job_ids, max_wait=60, interval=2):
     print("ASYNC JOB PROCESSING")
     print("=" * 45)
 
-    statuses = {
-        job_id: None
-        for job_id in job_ids
-    }
+    statuses = {job_id: None for job_id in job_ids}
 
     start = time.perf_counter()
 
     while time.perf_counter() - start < max_wait:
-
         for job_id in job_ids:
             if statuses[job_id] in ("COMPLETED", "FAILED"):
                 continue
@@ -109,19 +101,12 @@ def monitor_jobs(base_url, job_ids, max_wait=60, interval=2):
             if result:
                 statuses[job_id] = result.get("status")
 
-        completed = sum(
-            status == "COMPLETED"
-            for status in statuses.values()
-        )
+        completed = sum(status == "COMPLETED" for status in statuses.values())
 
-        failed = sum(
-            status == "FAILED"
-            for status in statuses.values()
-        )
+        failed = sum(status == "FAILED" for status in statuses.values())
 
         pending = sum(
-            status in (None, "PENDING", "RUNNING")
-            for status in statuses.values()
+            status in (None, "PENDING", "RUNNING") for status in statuses.values()
         )
 
         print(
@@ -147,11 +132,8 @@ def monitor_jobs(base_url, job_ids, max_wait=60, interval=2):
     return statuses
 
 
-
 def main():
-    parser = argparse.ArgumentParser(
-        description="Controlled load test for AIOps Lab"
-    )
+    parser = argparse.ArgumentParser(description="Controlled load test for AIOps Lab")
 
     parser.add_argument("port", type=int)
     parser.add_argument("--host", default="127.0.0.1")
@@ -177,10 +159,7 @@ def main():
 
     results = []
 
-    with ThreadPoolExecutor(
-        max_workers=args.concurrency
-    ) as executor:
-
+    with ThreadPoolExecutor(max_workers=args.concurrency) as executor:
         futures = [
             executor.submit(send_request, base_url, args.timeout)
             for _ in range(args.requests)
@@ -200,16 +179,13 @@ def main():
     total_duration = time.perf_counter() - start
 
     durations = [r["duration"] for r in results]
-    successful = [r for r in results if isinstance(r["status"], int)
-                  and 200 <= r["status"] < 300]
+    successful = [
+        r for r in results if isinstance(r["status"], int) and 200 <= r["status"] < 300
+    ]
 
     status_counts = Counter(str(r["status"]) for r in results)
 
-    job_ids = [
-        r["job_id"]
-        for r in successful
-        if r["job_id"] is not None
-    ]
+    job_ids = [r["job_id"] for r in successful if r["job_id"] is not None]
 
     print("\n" + "=" * 45)
     print("LOAD TEST RESULTS")

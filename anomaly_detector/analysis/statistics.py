@@ -1,9 +1,9 @@
 import pandas as pd
 from shared.config.logging import AiOpsLog
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+
 
 class Statistics:
-
     def __init__(self):
         self.log = AiOpsLog("anomaly_lab.analysis.statistics")
 
@@ -23,12 +23,16 @@ class Statistics:
             "max": float(values.max()),
             "p50": float(values.quantile(0.50)),
             "p95": float(values.quantile(0.95)),
-            "p99": float(values.quantile(0.99))
+            "p99": float(values.quantile(0.99)),
         }
 
     def print_stats(self, stats: dict):
-         for name, value in stats.items():
-            print(f"{name}: {value:.4f}" if isinstance(value, float) else f"{name}: {value}")
+        for name, value in stats.items():
+            print(
+                f"{name}: {value:.4f}"
+                if isinstance(value, float)
+                else f"{name}: {value}"
+            )
 
     def print_graph(self, df: pd.DataFrame, stats: dict):
         plt.figure(figsize=(12, 5))

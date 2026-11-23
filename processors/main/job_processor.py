@@ -130,12 +130,11 @@ class JobProcessor:
             try:
                 total = sum(job.numbers)
 
-                
                 if JOB_PROCESSOR_SLOW_DOWN:
-                    t: int = random.randint(30,40)
+                    t: int = random.randint(30, 40)
                     self.log.info(f"Slow mode enabled. Sleeping for {t} seconds")
                 else:
-                    t: int = random.randint(2,6)
+                    t: int = random.randint(2, 6)
                     self.log.info(f"Fast mode enabled. Sleeping for {t} seconds")
                 time.sleep(t)
 

@@ -1,4 +1,4 @@
-.PHONY: install run-app docker-up docker-down traffic-generator heavy-load-generator anomaly-lab
+.PHONY: install run-app docker-up docker-down traffic-generator heavy-load-generator anomaly-detection-app
 
 install:
 	pip install -e ".[dev]"
@@ -7,7 +7,7 @@ run-app:
 	uvicorn app.main.fast_api_app:app --reload
 
 docker-up:
-	docker compose up --build job_processor -d
+	docker compose up --build anomaly_detector -d
 
 docker-down:
 	docker compose down
@@ -18,5 +18,5 @@ traffic-generator:
 heavy-load-generator:
 	py tests_scripts/heavy_load_generator.py 8000 --request 100 --concurrency 5
 
-anomaly-lab:
-	py anomaly_lab/main.py
+anomaly-detection-app:
+	py anomaly_detector/main.py

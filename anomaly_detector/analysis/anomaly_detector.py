@@ -1,13 +1,13 @@
 from shared.config.logging import AiOpsLog
 import pandas as pd
 
-class AnomalyDetector:
 
+class AnomalyDetector:
     def __init__(self):
         self.log = AiOpsLog("anomaly_lab.analysis.anomaly_detector")
 
     def detect_anomalies_against_baseline(
-              self,
+        self,
         baseline: pd.Series,
         current_values: pd.Series,
         threshold: float = 3.0,
@@ -21,35 +21,40 @@ class AnomalyDetector:
 
         z_scores = (current_values - mean) / std
 
-        return pd.DataFrame({
-            "value": current_values,
-            "z_score": z_scores,
-            "is_anomaly": z_scores.abs() > threshold,
-        })
+        return pd.DataFrame(
+            {
+                "value": current_values,
+                "z_score": z_scores,
+                "is_anomaly": z_scores.abs() > threshold,
+            }
+        )
 
     def detect_anomalies(
-              self,
-            values: pd.Series,
-            threshold: float = 3.0,
-        ) -> pd.DataFrame:
+        self,
+        values: pd.Series,
+        threshold: float = 3.0,
+    ) -> pd.DataFrame:
 
-            mean = values.mean()
-            std = values.std()
+        mean = values.mean()
+        std = values.std()
 
-            z_scores = self._calculate_z_scores(
-                values=values,
-                mean=mean,
-                std=std,
-            )
+        z_scores = self._calculate_z_scores(
+            values=values,
+            mean=mean,
+            std=std,
+        )
 
-            return pd.DataFrame({
+        return pd.DataFrame(
+            {
                 "value": values,
                 "z_score": z_scores,
                 "is_anomaly": z_scores.abs() > threshold,
-            })
+            }
+        )
 
-    def _calculate_z_scores(self,  
-                            values: pd.Series,
+    def _calculate_z_scores(
+        self,
+        values: pd.Series,
         mean: float,
         std: float,
     ) -> pd.Series:

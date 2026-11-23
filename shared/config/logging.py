@@ -117,6 +117,9 @@ class AiOpsLog:
     def info(self, message: str, **kwargs):
         self.log.info(message, extra=self.otel_attributes(**kwargs))
 
+    def warning(self, message: str, **kwargs):
+        self.log.warning(message, extra=self.otel_attributes(**kwargs))
+
     def error(self, message: str, **kwargs):
         self.log.error(message, extra=self.otel_attributes(**kwargs))
 
